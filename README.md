@@ -1,33 +1,31 @@
-## aliyun_ddns --基于阿里云解析的动态域名解析
+### Env
 
-之前考虑的方案是使用小米路由器ddns+花生壳，然而看到花生壳恶心的域名名称后果断放弃了，加之其免费的动态域名解析服务的口碑都是出奇的慢，之前也使用过，速度确实没法玩耍。
+解析设置 abc.com
 
-### 为何要写这个
-为了达到使用域名即可访问家里服务的目的，需要两个条件，外网ip和域名。
+|记录类型|主机记录|解析线路(isp)|记录值|MX优先级|TTL|状态|操作|
+|-------|-----:|-----:|-----:|-----:|-----:|-----:|:----:|
+| A    | blog  |  默认  |127.0.0.1    |--    |10 分钟|	正常    |修改暂停删除备注
 
-域名这个简单，在阿里云购买一个即可，麻烦的是ip，由于目前家庭使用的宽带基本上都是服务商动态分配的ip(有的甚至只分配内网ip，这个需要打电话给服务商要回外网ip！)这样的话，域名解析就没法玩了，此时需要动态域名解析，能够在家里ip变化的时候更新解析记录。
+DomainName=abc.com
 
-当然可以使用花生壳，但是开头已经提到了两个蛋疼的原因，所以，这个工具脚本需求就来了！
+RRKeyWord=blog
 
-### 实现方法
-定时检测自家外网ip地址，有变化就调用阿里云解析的api修改域名解析。
+TypeKeyWord=A
 
-### 前提条件
-1. 确保自己拥有外网ip
-2. 使用阿里云解析，申请access_key
-3. 首先在阿里云解析中新增域名的解析记录 (重要！！！因为本脚本只是修改，所以前提得有可修改的解析记录！！！)
 
-### 脚本依赖
-1. python环境 (安装python2.7, 不支持python3)
-2. pip install requests
+### Deploy
 
-### 使用说明
-1. 修改aliyun_settings.json中的access_key、access_secret为自己申请的accesskey
-2. 修改aliyun_settings.json中的domain为自己要解析的域名，比如 "baidu.com''
-3. 定时执行 python aliyun_ddns.py   (windows和linux环境下的定时任务就不提了)
-4. 最新的ip会保存在同级目录的ip.txt中，方便查看
-5. 脚本的执行步骤有print日志，如有问题，先分析下输出内容
+#### image 
 
-### 注意
-修改完解析记录后并不会马上生效，因为dns服务都有缓存，所以得等，阿里云的解析ttl可以设置的最小值为10分钟，所以有时候得等一会才能生效。
-如果迟迟不生效，首先登录阿里云控制台查看解析记录是否成功修改，如果已经修改，那么就是dns服务的缓存问题了，这个基本就是死等。。。
+[https://hub.docker.com/r/cuidapeng/aliyun-ddns/](https://hub.docker.com/r/cuidapeng/aliyun-ddns/) for x86
+
+[https://hub.docker.com/r/cuidapeng/arm32v7-aliyun-ddns/](https://hub.docker.com/r/cuidapeng/arm32v7-aliyun-ddns/) for arm like raspberry pi
+
+#### run docker contain
+
+`docker run -d --name aliyun-ddns -e ACCESS_KEY={access_key} -e ACCESS_SECRET={access_secret} -e DomainName=abc.com  -e RRKeyWord=blog  -e TypeKeyWord=A cuidapeng/arm32v7-aliyun-ddns`
+
+
+### Add Cron
+
+` */5 * * * * /usr/bin/docker restart aliyun-ddns`
